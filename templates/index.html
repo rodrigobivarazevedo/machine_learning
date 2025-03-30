@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat or Dog Prediction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Upload an Image of a Cat or Dog</h2>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="uploadImage()">Predict</button>
+
+        <!-- Image preview -->
+        <div id="imagePreviewContainer">
+            <img id="preview" src="" alt="Image Preview" style="display:none;"/>
+        </div>
+
+        <!-- Prediction result -->
+        <p id="prediction" style="font-weight: bold;"></p>
+    </div>
+
+    <script>
+        // Function to upload image and get prediction
+        function uploadImage() {
+            let fileInput = document.getElementById("fileInput");
+            if (!fileInput.files.length) {
+                alert("Please select an image!");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            // Preview image on the frontend
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById("preview").src = e.target.result;
+                document.getElementById("preview").style.display = "block";
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+
+            // Send image to FastAPI backend for prediction
+            fetch("/predict", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById("prediction").innerText = "Error: " + data.error;
+                } else {
+                    document.getElementById("prediction").innerText = 
+                        "Predicted Class: " + data.predicted_class + 
+                        " | Confidence: " + (data.confidence * 100).toFixed(2) + "%";
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>
