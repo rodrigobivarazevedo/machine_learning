@@ -8,7 +8,9 @@ from PIL import Image
 app = FastAPI()
 
 # Load the TensorFlow model (update path if needed)
-MODEL_PATH = "efficientnet_model_cat_dog_classes.h5"
+#MODEL_PATH = "../saved_models/mobile_net_transfer_learning_cat_dog.h5"
+
+MODEL_PATH = "app/mobile_net_transfer_learning_cat_dog.h5"
 model = tf.keras.models.load_model(MODEL_PATH)
 
 # Define image size expected by your model
