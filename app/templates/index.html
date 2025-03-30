@@ -4,27 +4,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cat or Dog Prediction</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #eef2f3;
+            padding: 40px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        input[type="file"] {
+            margin-top: 15px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 100%;
+        }
+
+        img {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            object-fit: cover;
+            margin-top: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        #prediction {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #loading {
+            display: none;
+            margin-top: 15px;
+            font-size: 16px;
+            color: #777;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h2>Upload an Image of a Cat or Dog</h2>
         <input type="file" id="fileInput" accept="image/*">
         <button onclick="uploadImage()">Predict</button>
+        
+        <p id="loading">Processing...</p>
 
         <!-- Image preview -->
-        <div id="imagePreviewContainer">
-            <img id="preview" src="" alt="Image Preview" style="display:none;"/>
-        </div>
+        <img id="preview" src="" alt="Image Preview"/>
 
         <!-- Prediction result -->
-        <p id="prediction" style="font-weight: bold;"></p>
+        <p id="prediction"></p>
     </div>
 
     <script>
-        // Function to upload image and get prediction
         function uploadImage() {
             let fileInput = document.getElementById("fileInput");
+            let predictionText = document.getElementById("prediction");
+            let loadingText = document.getElementById("loading");
+            let previewImage = document.getElementById("preview");
+
             if (!fileInput.files.length) {
                 alert("Please select an image!");
                 return;
@@ -32,31 +107,39 @@
 
             let formData = new FormData();
             formData.append("file", fileInput.files[0]);
+            
+            // Show loading text and reset previous output
+            loadingText.style.display = "block";
+            predictionText.innerText = "";
+            previewImage.style.display = "none";
 
-            // Preview image on the frontend
             let reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById("preview").src = e.target.result;
-                document.getElementById("preview").style.display = "block";
+                previewImage.src = e.target.result;
+                previewImage.style.display = "block";
             };
             reader.readAsDataURL(fileInput.files[0]);
 
-            // Send image to FastAPI backend for prediction
             fetch("/predict", {
                 method: "POST",
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
+                loadingText.style.display = "none";
                 if (data.error) {
-                    document.getElementById("prediction").innerText = "Error: " + data.error;
+                    predictionText.innerText = "Error: " + data.error;
                 } else {
-                    document.getElementById("prediction").innerText = 
-                        "Predicted Class: " + data.predicted_class + 
+                    predictionText.innerText = 
+                        "Predicted: " + data.predicted_class + 
                         " | Confidence: " + (data.confidence * 100).toFixed(2) + "%";
                 }
             })
-            .catch(error => console.error("Error:", error));
+            .catch(error => {
+                console.error("Error:", error);
+                loadingText.style.display = "none";
+                predictionText.innerText = "Prediction failed. Try again.";
+            });
         }
     </script>
 </body>
