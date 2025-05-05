@@ -120,7 +120,7 @@
             };
             reader.readAsDataURL(fileInput.files[0]);
 
-            fetch("/predict", {
+            fetch("/predict_cats_and_dogs", {
                 method: "POST",
                 body: formData
             })
